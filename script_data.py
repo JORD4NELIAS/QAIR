@@ -34,10 +34,13 @@ excluir_linhas = [
    'Soma',
    'UNIDADES',
    'MÊS',
-   0,
+   '0',
    '-9999.=',
+   '3.64=',
    'DIA',
-   ''
+   '',
+   '10%',
+   '1.65x'
    ]
 
 #%% Bloco 03 - Leitura, mineração dos dados e exportação
@@ -46,22 +49,22 @@ while True:
   # Lê todos os dados dos anos de 2020 e 2024 devido a formatação dos dados na planilha
     if ano == 2020:
       if i < 4 and ano == 2020:
-        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,G", skiprows=6)
+        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,G", skiprows=6, dtype=str)
       elif i == 6 and ano == 2020:
-        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,G", skiprows=3)
+        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,G", skiprows=3, dtype=str)
       else:
-        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,G", skiprows=4)
+        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,G", skiprows=4, dtype=str)
     
     # Tratamento de dados para os demais anos com pontos de parada para ano o 2021 devido ter somente 3 mêses
     elif ano >= 2021 and ano <= 2024:
       if i == 1 and ano == 2021:
-        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,D", skiprows=4)
+        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,D", skiprows=4, dtype=str)
       elif (i == 11 or i == 12) and ano == 2021:
-        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,D", skiprows=3)
+        datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,D", skiprows=3, dtype=str)
         arquivo_inexistente = False
       else:
         try:
-          datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,D", skiprows=3)
+          datasets = pd.read_excel(caminho + f'{ano}/Dados_SEUMA_medicao_{ano}_{i}.xlsx', usecols="A,D", skiprows=3, dtype=str)
           arquivo_inexistente = False
         except FileNotFoundError as e:
            print(f'Não foi encontrado o arquivo {i}/{ano}: {e}')
@@ -73,8 +76,16 @@ while True:
   # Verifica e limpa os dados dos datasets e inseri em um dicionário
   if not ano == 2025:
     datasets.replace(['', ' ', 'N/A', 'NULL'],pd.NA, inplace=True)
-    datasets_limpo = datasets.dropna()
-    filtro_datasets = datasets_limpo[~datasets_limpo.isin(excluir_linhas).any(axis=1)]
+    datasets.columns = ['dia', 'NO2']
+    datasets['NO2'] = datasets['NO2'].str.replace('<','', regex=True)
+    datasets['NO2'] = datasets['NO2'].str.replace('>','', regex=True).str.replace('f', '', regex=True)
+    datasets['NO2'] = datasets['NO2'].str.replace(',','.', regex=True)
+    datasets = datasets.dropna()
+    filtro_datasets = datasets[~datasets.isin(excluir_linhas).any(axis=1)]
+    # filtro_datasets.columns = ['dia', 'NO2']
+    filtro_datasets['NO2'] = filtro_datasets['NO2'].astype(float)
+    # filtro_datasets['NO2'] = filtro_datasets['NO2'].str.replace('<', '', regex=True).str.replace('>', '', regex=True)
+    # filtro_datasets['NO2'] = filtro_datasets['NO2'].str.replace('=', '', regex=True).str.replace('f', '', regex=True)
 
     # Pula os arquivos inexistente
     if not arquivo_inexistente:
@@ -89,12 +100,21 @@ while True:
 
   else:
     break
-
 # Cria um arquivo de saída com todos os daframes criados dos mêses
 with open("dados.txt", "w", encoding="utf-8") as file:
     for key, df in no2_meses.items():
         file.write(f"DataFrame: {key}\n")
         file.write(df.to_csv(sep="\t", index=False, encoding="utf-8"))
         file.write("\n\n")
+
+# %%
+medianas = {}
+filtro_datasets.columns = ['Data', 'NO2']
+# datasets_limpo = filtro_datasets[filtro_datasets['NO2'].str.contains('<', case=False)]
+
+print(filtro_datasets.iloc[20:40, 1])
+print(filtro_datasets.dtypes)
+# for key, mes in no2_meses.items():
+
 
 # %%
