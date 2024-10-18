@@ -82,10 +82,7 @@ while True:
     datasets['NO2'] = datasets['NO2'].str.replace(',','.', regex=True)
     datasets = datasets.dropna()
     filtro_datasets = datasets[~datasets.isin(excluir_linhas).any(axis=1)]
-    # filtro_datasets.columns = ['dia', 'NO2']
     filtro_datasets['NO2'] = filtro_datasets['NO2'].astype(float)
-    # filtro_datasets['NO2'] = filtro_datasets['NO2'].str.replace('<', '', regex=True).str.replace('>', '', regex=True)
-    # filtro_datasets['NO2'] = filtro_datasets['NO2'].str.replace('=', '', regex=True).str.replace('f', '', regex=True)
 
     # Pula os arquivos inexistente
     if not arquivo_inexistente:
@@ -97,24 +94,13 @@ while True:
     if i == 13:
       ano += 1
       i = 1
-
   else:
     break
+
 # Cria um arquivo de saída com todos os daframes criados dos mêses
 with open("dados.txt", "w", encoding="utf-8") as file:
     for key, df in no2_meses.items():
         file.write(f"DataFrame: {key}\n")
         file.write(df.to_csv(sep="\t", index=False, encoding="utf-8"))
         file.write("\n\n")
-
-# %%
-medianas = {}
-filtro_datasets.columns = ['Data', 'NO2']
-# datasets_limpo = filtro_datasets[filtro_datasets['NO2'].str.contains('<', case=False)]
-
-print(filtro_datasets.iloc[20:40, 1])
-print(filtro_datasets.dtypes)
-# for key, mes in no2_meses.items():
-
-
 # %%
